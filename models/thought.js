@@ -1,4 +1,4 @@
-const { Schema, model } = require('mongoose');
+const { Schema, Types, model } = require('mongoose');
 const Reaction =require('./Reaction');
 const { startSession } = require('./User');
 const thoughtSchema = new Schema(
@@ -31,6 +31,35 @@ const thoughtSchema = new Schema(
 thoughtSchema.virtual('reactionCount').get(function () {
   return this.reactions.length;
 });
+
+const reactionSchema = new Schema({
+  reactionid: { 
+      type: Schema.Types.ObjectId,
+      default: () => new Types.ObjectId(),
+  },
+  reactionBody:{ 
+      type: String, 
+      required: true, 
+      maxlength:280,
+  },
+  username: {
+      type: String, 
+      required: true,
+  },
+  createdAt:{
+      type: Date,
+      default: Date.now(),
+  },
+},
+{
+  toJSON: {
+    getters: true,
+  },
+  id: false,
+}
+);
+
+module.exports = reactionSchema
 
 const Thought = model('thought', thoughtSchema);
 
