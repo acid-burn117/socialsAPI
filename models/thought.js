@@ -1,66 +1,70 @@
-const { Schema, Types, model } = require('mongoose');
-const Reaction =require('./Reaction');
-const { startSession } = require('./user');
-const thoughtSchema = new Schema(
+const { Schema, Types, model } = require("mongoose");
+
+const thoughtsSchema = new Schema(
   {
+    thoughtId: {
+      type: Schema.Types.ObjectId,
+      default: () => new Types.ObjectId(),
+    },
     thoughtText: {
       type: String,
       required: true,
-      maxlength: 280,
-      minlength: 1,
+      maxlength: 100,
+      minlength: 4,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now(),
-    
-    },
-    username:{
-      type: String,
-      required: true,
-    },
-    reactions: [Reaction],
+    createdAt: { type: Date, default: Date.now },
+    reactions: [{ type: Schema.Types.ObjectId, ref: "Reactions" }],
   },
   {
     toJSON: {
-      virtuals: true,
       getters: true,
     },
+    id: false,
   }
 );
 
-thoughtSchema.virtual('reactionCount').get(function () {
-  return this.reactions.length;
+const Thoughts = model("thoughts", thoughtsSchema);
+
+module.exports = Thoughts;
+
+const handleError = (err) => console.error(err);
+
+Thoughts.find({}).exec((err, collection) => {
+  if (collection.length === 0) {
+    Thoughts.insertMany(
+      [
+        {
+          thoughtText: "This application is horrible!",
+          reactions: [
+            "62522e8eed7fda4f2d05fdf4",
+            "62522e8eed7fda4f2d05fdf6",
+            "62522e8eed7fda4f2d05fdf8",
+          ],
+        },
+        {
+          thoughtText: "why is the cake so dry",
+          reactions: ["62522e8eed7fda4f2d05fdfa"],
+        },
+        { thoughtText: "I've had better lamb off a NYC street truck" },
+        {
+          thoughtText: "Does anyone have hope for the Mets?",
+          reactions: ["62522e8eed7fda4f2d05fdfe"],
+        },
+        { thoughtText: "Why do the Knicks always do this to me" },
+        {
+          thoughtText: "Truth is steelers have been just as bad as the Cowboys lately",
+          reactions: ["62522e8eed7fda4f2d05fdfc"],
+        },
+        {
+          thoughtText:
+            "I love writing things here",
+        },
+      ],
+      (insertErr) => {
+        if (insertErr) {
+          handleError(insertErr);
+        }
+      }
+    );
+  }
 });
-const Thought = model('thought', thoughtSchema);
-
-module.exports = Thought;
-
-const reactionSchema = new Schema({
-  reactionid: { 
-      type: Schema.Types.ObjectId,
-      default: () => new Types.ObjectId(),
-  },
-  reactionBody:{ 
-      type: String, 
-      required: true, 
-      maxlength:280,
-  },
-  username: {
-      type: String, 
-      required: true,
-  },
-  createdAt:{
-      type: Date,
-      default: Date.now(),
-  },
-},
-{
-  toJSON: {
-    getters: true,
-  },
-  id: false,
-}
-);
-
-module.exports = reactionSchema
-startSession();

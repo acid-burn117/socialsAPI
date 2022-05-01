@@ -1,50 +1,60 @@
-const { Schema, model } = require('mongoose');
-
-const validateEmail = function(email) {
-  var re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-  return re.test(email)
-};
+const { Schema, Types, model } = require("mongoose");
 
 const userSchema = new Schema(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      default: () => new Types.ObjectId(),
+    },
     username: {
       type: String,
-      unique: true,
       required: true,
-      trim: true,
+      maxlength: 12,
+      minlength: 4,
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      validate: validateEmail(),
-      match:[/^([a-zA-Z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/,'Email not valid'], 
- 
-    },
-    thoughts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'thought',
-      },
-    ],
-    friends: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'user',
-        },
-      ],
+    lastAccessed: { type: Date, default: Date.now },
+    thoughts: [{ type: Schema.Types.ObjectId, ref: "Thoughts" }],
   },
   {
     toJSON: {
-      virtuals: true,
+      getters: true,
     },
     id: false,
   }
 );
-userSchema.virtual('friendCount').get(function () {
-  return this.friends.length;
+
+const Users = model("users", userSchema);
+module.exports = Users;
+
+const handleError = (err) => console.error(err);
+
+Users.find({}).exec((err, collection) => {
+  if (collection.length === 0) {
+    Users.insertMany(
+      [
+        {
+          username: "theboss",
+          thoughts: [
+            "62521e72766e700455dffc2c",
+            "62521e72766e700455dffc2e",
+            "62521e72766e700455dffc30",
+            "62521e72766e700455dffc32",
+          ],
+        },
+        {
+          username: "dbmaster",
+          thoughts: ["62521e72766e700455dffc28", "62521e72766e700455dffc2a"],
+        },
+        {
+          username: "quickfingers",
+          thoughts: ["62521e72766e700455dffc26"],
+        },
+      ],
+      (insertErr) => {
+        if (insertErr) {
+          handleError(insertErr);
+        }
+      }
+    );
+  }
 });
-
-const User = model('user', userSchema);
-
-module.exports = User;
